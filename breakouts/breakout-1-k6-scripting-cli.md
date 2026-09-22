@@ -1,12 +1,12 @@
-## Breakout 1: k6 scripting
+## Breakout 1: Scripting con k6
 
-The first breakout will familiarize you with the basics of scripting with k6.
+En este primer breakout te familiarizarás con los conceptos básicos de scripting con k6.
 
-### 1: Creating the script
+### 1: Creando el script
 
-To begin, open up a terminal and use it to create a new file called `script.js`, then open it for editing.
+Para comenzar, abre una terminal y úsala para crear un nuevo archivo llamado `script.js`, luego ábrelo para editarlo.
 
-Our first exercise will be to create a script that will send a GET request to the recommendations endpoint. Copy the code below into your script, and make sure to replace `<YOUR USERNAME>` in the URL with the username provided in your welcome email:
+Nuestro primer ejercicio será crear un script que enviará una solicitud GET al endpoint de recomendaciones. Copia el siguiente código en tu script y asegúrate de reemplazar `<YOUR USERNAME>` en la URL con el nombre de usuario proporcionado en tu correo de bienvenida:
 
 ```javascript
 import http from 'k6/http'
@@ -21,23 +21,23 @@ export default function() {
 }
 ```
 
-Lets break down what's in the script:
+Analicemos qué contiene el script:
 
-- There is an initial `import` of the k6 `http` client, which will be used to make HTTP requests.
-- We then declare and export a `options` object. As indicated by the name, this object allows you to define a myriad of options that influence how the script runs. In this case, we set both `vus` and `iterations` properties to `1`. Doing so will result in a single execution of the code inside the `default function` when the script is run.
-- Finally, we declare and export a `default function` that contains the code for making the HTTP GET request. We see here `http.get` being used in its simplest form, namely a single parameter specifying the URL that the GET request should be sent to. There are, however, overloads to the function that cater for sending additional parameters such as headers. We'll see some examples of that later on.
+- Hay un `import` inicial del cliente `http` de k6, que se usará para hacer solicitudes HTTP.
+- Luego declaramos y exportamos un objeto `options`. Como indica su nombre, este objeto te permite definir una gran variedad de opciones que influyen en cómo se ejecuta el script. En este caso, establecemos las propiedades `vus` e `iterations` en `1`. Esto hará que el código dentro de la `default function` se ejecute una sola vez cuando se ejecute el script.
+- Finalmente, declaramos y exportamos una `default function` que contiene el código para hacer la solicitud HTTP GET. Aquí vemos `http.get` usado en su forma más simple, es decir, con un único parámetro que especifica la URL a la que se debe enviar la solicitud GET. Sin embargo, existen variantes ("overloads") de la función que permiten enviar parámetros adicionales, como headers. Veremos algunos ejemplos de eso más adelante.
 
-### 2: Running the script
+### 2: Ejecutando el script
 
-Now, lets run it! Save the script and then using your terminal, navigate to the folder that the script resides within. Execute the following command to run the script:
+Ahora, ¡vamos a ejecutarlo! Guarda el script y luego, usando tu terminal, navega hasta la carpeta donde se encuentra el script. Ejecuta el siguiente comando para correr el script:
 
 ```
 k6 run script.js
 ```
 
-NOTE: If you see an error suggesting your OS does not recognize the `k6` command, this means that the k6 executable is not on your PATH. Either add the location of k6 to your PATH environment variable (recommended), or include the path to the k6 executable in the command itself.
+NOTA: Si ves un error que indica que tu sistema operativo no reconoce el comando `k6`, significa que el ejecutable de k6 no está en tu PATH. Puedes agregar la ubicación de k6 a tu variable de entorno PATH (recomendado), o incluir la ruta al ejecutable de k6 directamente en el comando.
 
-A successful execution of the command should yield output similar to the below:
+Una ejecución exitosa del comando debería producir una salida similar a la siguiente:
 
 ```
           /\      |‾‾| /‾‾/   /‾‾/
@@ -70,24 +70,24 @@ A successful execution of the command should yield output similar to the below:
      iterations.....................: 1      4.117856/s
 ```
 
-Congratulations, you've just run a k6 test!
+¡Felicidades, acabas de ejecutar una prueba de k6!
 
-Lets go through some of what is displayed in the CLI output:
+Repasemos algunas cosas que se muestran en la salida de la CLI:
 
-- Beneath the k6 logo, we see that `execution` was `local`, indicating that this script was run from the local machine. The other type of `execution` you might see here is `cloud` which is what would happen when using the command `k6 cloud script.js` - this tells k6 to upload and run the script on Grafana Cloud instead.
-- We see mention of "scenarios", along with some information about "max VUs" and "max duration". k6 has the ability to run multiple different tests in parallel - each of these different tests would be called a `scenario`. In this case, we haven't explicitly defined a `scenario` in our script, and so this section is just telling us what the settings were for the implicit default scenario. The maximum number of VUs was `1` which is what we expect to see. The max duration is `10m30s` and this represents the maximum amount of time k6 has been given to run the test. The `10m` portion is the default amount of time given to execute the scenario, and the `30s` portion represents `gracefulStop` which is the maximum amount of time VUs have to complete any running iterations of the script before k6 forcibly aborts it.
-- Finally, we see the default Metrics produced by k6. Many of these are for various HTTP timings (`http_req_*`), of which `http_req_duration` is the most useful to look at as it represents the end-to-end time taken to send and receive HTTP requests. Outside of those, we also have:
-  - `data sent/received`: The amount of network traffic generated/received by the HTTP traffic incurred by the test.
-  - `http_reqs`: The total number of HTTP requests sent, as well as the per-second HTTP request rate.
-  - `iteration_duration`: How long it took to complete 1 iteration of the script (in this case corresponding to how long it took to execute the `default function`).
-  - `iterations`: The total number of iterations, as well as the per-second iteration rate.
-  - `http_req_failed`: The number of failed HTTP requests. Note that 0% means no failures.
+- Debajo del logo de k6, vemos que `execution` fue `local`, lo que indica que este script se ejecutó desde la máquina local. El otro tipo de `execution` que podrías ver aquí es `cloud`, que es lo que ocurriría al usar el comando `k6 cloud script.js` - esto le indica a k6 que suba y ejecute el script en Grafana Cloud en su lugar.
+- Vemos una mención a "scenarios", junto con información sobre "max VUs" y "max duration". k6 tiene la capacidad de ejecutar varias pruebas diferentes en paralelo - cada una de estas pruebas diferentes se llamaría un `scenario`. En este caso, no hemos definido explícitamente un `scenario` en nuestro script, por lo que esta sección simplemente nos indica cuáles eran los ajustes del escenario predeterminado implícito. El número máximo de VUs fue `1`, que es lo que esperamos ver. La duración máxima es `10m30s` y representa el tiempo máximo que se le ha dado a k6 para ejecutar la prueba. La parte `10m` es el tiempo predeterminado dado para ejecutar el escenario, y la parte `30s` representa `gracefulStop`, que es el tiempo máximo que tienen los VUs para completar cualquier iteración en curso del script antes de que k6 la interrumpa forzosamente.
+- Finalmente, vemos las métricas predeterminadas que produce k6. Muchas de ellas corresponden a distintos tiempos HTTP (`http_req_*`), de las cuales `http_req_duration` es la más útil de observar, ya que representa el tiempo total de extremo a extremo empleado en enviar y recibir solicitudes HTTP. Además de esas, también tenemos:
+  - `data sent/received`: La cantidad de tráfico de red generado/recibido por el tráfico HTTP producido por la prueba.
+  - `http_reqs`: El número total de solicitudes HTTP enviadas, así como la tasa de solicitudes HTTP por segundo.
+  - `iteration_duration`: Cuánto tiempo tomó completar 1 iteración del script (en este caso, corresponde a cuánto tardó en ejecutarse la `default function`).
+  - `iterations`: El número total de iteraciones, así como la tasa de iteraciones por segundo.
+  - `http_req_failed`: El número de solicitudes HTTP fallidas. Ten en cuenta que 0% significa que no hubo fallos.
 
-Given that we only ran 1 iteration and therefore only made 1 HTTP request, the timings are all reporting the same min/median/max/90th percentile/95th percentile values. Lets do something about that, and what better way to do that than to run an actual load test!
+Dado que solo ejecutamos 1 iteración y, por lo tanto, hicimos solo 1 solicitud HTTP, los tiempos reportados son todos iguales para los valores mínimo/mediana/máximo/percentil 90/percentil 95. Hagamos algo respecto a eso, ¡y qué mejor manera de hacerlo que ejecutando una prueba de carga real!
 
-### 3: Running a load test
+### 3: Ejecutando una prueba de carga
 
-Modify the existing script with these changes. Note that if you copy & paste the entire script, you will need to replace your username in the URL again:
+Modifica el script existente con estos cambios. Ten en cuenta que si copias y pegas el script completo, deberás reemplazar tu nombre de usuario en la URL nuevamente:
 
 ```javascript
 import http from 'k6/http'
@@ -106,13 +106,13 @@ export default function() {
 }
 ```
 
-Here's what has changed in this script:
+Esto es lo que ha cambiado en este script:
 
-- We have two additional `import` statements, the first of which is an import for `sleep` which is one of the many built-in functions available in k6. Its purpose is to induce an artificial delay whenever it is called. Although introducing a delay might seem counter-intuitive when we're wanting to generate load, it can be quite useful when the purpose of the load test is to have your Virtual Users more accurately represent *real* users, particularly those interacting with the APIs as a result of navigating a website: without any kind of delays in the script, the activity generated by running the test will be akin to users constantly refreshing the page. In reality, users will spend some time looking at what's rendered on the page before proceeding to the next one. During that time, it is likely that there isn't actually any HTTP activity. This is why these artificial delays are referred to as "think time" in performance testing lingo.
-- The second new `import` is for a function called `randomIntBetween`. Note that it is being retrieved from a URL instead of locally - as long as the JavaScript file referenced by the URL is publicly-accessible from the machine k6 runs on, we can use the functions exported from it. Have a look at https://jslib.k6.io/ to see what else is available. We'll be using `randomIntBetween` to add some randomization to the `sleep` function added into the `default function` after the request is made. This will help ensure our VUs don't all try to make the HTTP request at exactly the same times.
-- Finally, we've set `vus` to `100`, and `iterations` to `1000`. This will result in k6 using 100 VUs to perform exactly 1,000 iterations of the `default function`.
+- Tenemos dos declaraciones `import` adicionales, la primera de las cuales es una importación de `sleep`, que es una de las muchas funciones incorporadas disponibles en k6. Su propósito es inducir un retraso artificial cada vez que se llama. Aunque introducir un retraso pueda parecer contraintuitivo cuando queremos generar carga, puede ser bastante útil cuando el propósito de la prueba de carga es que tus Virtual Users representen con mayor precisión a usuarios *reales*, particularmente aquellos que interactúan con las APIs como resultado de navegar por un sitio web: sin ningún tipo de retraso en el script, la actividad generada al ejecutar la prueba se parecería a usuarios que actualizan la página constantemente. En la realidad, los usuarios pasarán algo de tiempo mirando lo que se muestra en la página antes de continuar a la siguiente. Durante ese tiempo, es probable que no haya realmente ninguna actividad HTTP. Por eso a estos retrasos artificiales se les llama "think time" en la jerga de las pruebas de rendimiento.
+- La segunda importación nueva es para una función llamada `randomIntBetween`. Ten en cuenta que se está obteniendo desde una URL en lugar de localmente - siempre que el archivo JavaScript referenciado por la URL sea accesible públicamente desde la máquina donde se ejecuta k6, podemos usar las funciones exportadas desde él. Échale un vistazo a https://jslib.k6.io/ para ver qué más hay disponible. Usaremos `randomIntBetween` para agregar algo de aleatoriedad a la función `sleep` añadida en la `default function` después de hacer la solicitud. Esto ayudará a garantizar que nuestros VUs no intenten hacer la solicitud HTTP exactamente al mismo tiempo.
+- Finalmente, hemos establecido `vus` en `100` e `iterations` en `1000`. Esto hará que k6 use 100 VUs para realizar exactamente 1000 iteraciones de la `default function`.
 
-Save the script, and run the test again with the same command as before (`k6 run script.js`):
+Guarda el script y ejecuta la prueba nuevamente con el mismo comando que antes (`k6 run script.js`):
 
 ```
           /\      |‾‾| /‾‾/   /‾‾/
@@ -147,25 +147,25 @@ Save the script, and run the test again with the same command as before (`k6 run
      vus_max........................: 100    min=100     max=100
 ```
 
-Using these metrics, we can now start making some interesting performance observations! Of course, your own results will likely be quite different to the above, so bear that in mind when making conclusions.
+Usando estas métricas, ¡ahora podemos empezar a hacer observaciones interesantes sobre el rendimiento! Por supuesto, tus propios resultados probablemente serán bastante diferentes a los de arriba, así que ten eso en cuenta al sacar conclusiones.
 
-- Sending 1,000 HTTP requests resulted in a total download size of 3.2 MB.
-- The average response time for the end-to-end sending/receiving of the request (`http_req_duration`) was 479.1ms. The minimum recorded response time was 77.6ms, so that's a fairly sizeable difference. The highest reported response time was 4.43s, but 95% of response times were below 3.23s (or, conversely, 5% of response times were above 3.23s) if we look at the `p(95)` value.
-  - There is an additional line just below `http_req_duration` that represents a filter that's been applied to `http_req_duration`, namely `{ expected_response:true }`. The timings reported here only take into consideration requests deemed as successful, which is useful when you consider that failures may skew the timings in either direction (servers may respond with an error instantly, or they might time out in which case the response times might skew upward).
-- 14 out of the 1,000 requests made - or 1.4% of the total - failed.
-- The test was able to achieve a HTTP request rate just shy of 26/s.
+- Enviar 1000 solicitudes HTTP resultó en un tamaño total de descarga de 3.2 MB.
+- El tiempo de respuesta promedio para el envío/recepción de extremo a extremo de la solicitud (`http_req_duration`) fue de 479.1ms. El tiempo de respuesta mínimo registrado fue de 77.6ms, así que hay una diferencia bastante considerable. El tiempo de respuesta más alto reportado fue de 4.43s, pero el 95% de los tiempos de respuesta estuvieron por debajo de 3.23s (o, dicho de otro modo, el 5% de los tiempos de respuesta estuvieron por encima de 3.23s) si observamos el valor `p(95)`.
+  - Hay una línea adicional justo debajo de `http_req_duration` que representa un filtro que se ha aplicado a `http_req_duration`, concretamente `{ expected_response:true }`. Los tiempos reportados aquí solo toman en cuenta las solicitudes consideradas exitosas, lo cual es útil si consideras que los fallos pueden sesgar los tiempos en cualquiera de las dos direcciones (los servidores pueden responder con un error instantáneamente, o pueden agotar el tiempo de espera, en cuyo caso los tiempos de respuesta podrían sesgarse hacia arriba).
+- 14 de las 1000 solicitudes realizadas - o el 1.4% del total - fallaron.
+- La prueba logró alcanzar una tasa de solicitudes HTTP de casi 26/s.
 
-There were a few shortcomings with the last test we ran that we should address.
+Hubo algunas deficiencias en la última prueba que ejecutamos que deberíamos abordar.
 
-The first of these was a lack of error handling/logging; we had failures occur but we don't really know why they happened. It might make sense to print some information to the console.
+La primera de ellas fue la falta de manejo de errores/registro (logging); tuvimos fallos, pero realmente no sabemos por qué ocurrieron. Podría tener sentido imprimir algo de información en la consola.
 
-The second change we'll make is to gradually ramp up the number of VUs over a period of time; despite adding a randomized delay into the `default function`, all of the VUs were configured to start at the same time and they would have all made the first HTTP request in exactly the same millisecond. This is *usually* not a realistic scenario, so lets give the server-side a bit more of a chance to react to the sudden influx of requests.
+El segundo cambio que haremos es aumentar gradualmente el número de VUs a lo largo de un período de tiempo; a pesar de haber agregado un retraso aleatorio en la `default function`, todos los VUs estaban configurados para iniciar al mismo tiempo y todos habrían hecho la primera solicitud HTTP exactamente en el mismo milisegundo. Esto *generalmente* no es un escenario realista, así que démosle al lado del servidor un poco más de oportunidad de reaccionar ante la repentina afluencia de solicitudes.
 
-The third change is to add a `Threshold` to the test. The Threshold will allow us to define what we consider to be a successful test. At the end of the test run, if the threshold fails, the exit code will be non-zero and we'll see a message indicating that the test failed as a result of the threshold being exceeded.
+El tercer cambio es agregar un `Threshold` a la prueba. El Threshold nos permitirá definir qué consideramos como una prueba exitosa. Al final de la ejecución de la prueba, si el threshold falla, el código de salida será distinto de cero y veremos un mensaje que indica que la prueba falló como resultado de haber superado el threshold.
 
-### 4: Adding error handling, ramping up VUs, and adding a threshold
+### 4: Agregando manejo de errores, incrementando gradualmente los VUs y agregando un threshold
 
-Here's the next version of the script we'll want to run. Again, make sure to replace the username in the URL:
+Aquí está la siguiente versión del script que querremos ejecutar. Nuevamente, asegúrate de reemplazar el nombre de usuario en la URL:
 
 ```javascript
 import http from 'k6/http'
@@ -197,36 +197,36 @@ export default function() {
 }
 ```
 
-What we've done:
-- Instead of setting `vus` and `iterations`, we instead now have a `stages` property in `options`, which in turn is set to an array of two objects that each represent a "stage" in our test. With `stages`, we are telling k6 to run a test with a variable number of VUs (the `target`) that will run for a specific length of time (the `duration`) instead of running a predetermined number of script iterations. The first stage translates to "start the test at 0 VUs and linearly increase the number of VUs to 200 over a 1 minute period". The second stage translates to "stay at 200 VUs for the next 2 minutes".
-- We also added a `thresholds` property to the `options` object, and set it to an object with a single property called `http_req_duration`, which is one of the built-in metrics. It represents the time taken from sending a request to receiving a response, and the expression provided translates to "95% of requests should be below 2000ms".
-- In the `default function`, we are now storing the HTTP response into a variable called `response`. We then call the newly imported `check` function. We'll use this to see if we received the expected status code - HTTP 200 - and if that's not the case, we'll log the received status code along with the response body, which may or may not include some additional debug information to help us determine what went wrong. `check` will give us a tally of the number of successes and failures in the end-of-test summary.
+Lo que hemos hecho:
+- En lugar de establecer `vus` e `iterations`, ahora tenemos una propiedad `stages` en `options`, que a su vez se establece en un array de dos objetos que representan cada uno una "etapa" en nuestra prueba. Con `stages`, le estamos indicando a k6 que ejecute una prueba con un número variable de VUs (el `target`) que se ejecutará durante un período de tiempo específico (la `duration`), en lugar de ejecutar un número predeterminado de iteraciones del script. La primera etapa se traduce como "comenzar la prueba con 0 VUs e incrementar linealmente el número de VUs a 200 durante un período de 1 minuto". La segunda etapa se traduce como "mantenerse en 200 VUs durante los siguientes 2 minutos".
+- También agregamos una propiedad `thresholds` al objeto `options`, y la configuramos con un objeto que tiene una única propiedad llamada `http_req_duration`, que es una de las métricas incorporadas. Representa el tiempo transcurrido desde que se envía una solicitud hasta que se recibe una respuesta, y la expresión proporcionada se traduce como "el 95% de las solicitudes deben estar por debajo de 2000ms".
+- En la `default function`, ahora estamos almacenando la respuesta HTTP en una variable llamada `response`. Luego llamamos a la función `check` recién importada. La usaremos para verificar si recibimos el código de estado esperado - HTTP 200 - y si no es el caso, registraremos el código de estado recibido junto con el cuerpo de la respuesta, que puede o no incluir información adicional de depuración que nos ayude a determinar qué salió mal. `check` nos dará un conteo del número de éxitos y fallos en el resumen final de la prueba.
 
-**Don't run it yet!** - we're going to change where we run this test from. Instead of running it locally, we're going to upload the script to Grafana Cloud and run it on hosted load generators.
+**¡Todavía no lo ejecutes!** - vamos a cambiar desde dónde ejecutamos esta prueba. En lugar de ejecutarla localmente, vamos a subir el script a Grafana Cloud y ejecutarlo en generadores de carga alojados (hosted load generators).
 
-### 5: Running the test in Grafana Cloud
+### 5: Ejecutando la prueba en Grafana Cloud
 
-Before you can run tests on Grafana Cloud k6, you will first need to authenticate your local k6 using an API token. The API token can be found in Grafana Cloud (`https://<YOUR USERNAME>.grafana.net/`).
+Antes de poder ejecutar pruebas en Grafana Cloud k6, primero necesitarás autenticar tu k6 local usando un token de API. El token de API se puede encontrar en Grafana Cloud (`https://<YOUR USERNAME>.grafana.net/`).
 
-Inside the `Performance Testing` navigation menu, go to the `Settings` page. There, you will see a section called `Personal API token`:
+Dentro del menú de navegación `Performance Testing`, ve a la página `Settings`. Ahí verás una sección llamada `Personal API token`:
 
 ![](images/01-personal-api-token.png)
 
-Copy this token to the clipboard. To authenticate, we'll go back to the terminal and pass the token into the following command:
+Copia este token al portapapeles. Para autenticarte, volveremos a la terminal y pasaremos el token en el siguiente comando:
 
 ```
 k6 login cloud --token <token>
 ```
 
-You should now be authenticated to the Cloud!
+¡Ahora deberías estar autenticado en la Cloud!
 
-Now, instead of running the test with `k6 run`, we'll use the `cloud` command:
+Ahora, en lugar de ejecutar la prueba con `k6 run`, usaremos el comando `cloud`:
 
 ```
 k6 cloud script.js
 ```
 
-Lets run it and see what happens!
+¡Vamos a ejecutarlo y ver qué sucede!
 
 ```
           /\      |‾‾| /‾‾/   /‾‾/
@@ -254,6 +254,6 @@ INFO[0126] Unexpected response code: 503. Received: upstream connect error or di
 Run    [======================================] Finished
 ```
 
-What do we see this time? We now see `execution` is set to `cloud`, and we are given a link to click in `output`. Click on this link to be taken to the real-time view of the running test in Grafana Cloud k6.
+¿Qué vemos esta vez? Ahora vemos que `execution` está establecido en `cloud`, y se nos proporciona un enlace para hacer clic en `output`. Haz clic en este enlace para acceder a la vista en tiempo real de la prueba en ejecución en Grafana Cloud k6.
   
-That's it for this breakout! We'll take a closer look at Grafana Cloud k6 in the next presentation.
+¡Eso es todo por este breakout! Veremos Grafana Cloud k6 más de cerca en la siguiente presentación.

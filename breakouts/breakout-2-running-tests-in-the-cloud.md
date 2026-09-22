@@ -1,62 +1,62 @@
-## Breakout 2: Running tests in the Cloud
+## Breakout 2: Ejecutando pruebas en la nube
 
-In this breakout, we'll be running a pre-configured k6 test available in your Grafana Cloud stack.
+En este breakout, ejecutaremos una prueba de k6 preconfigurada disponible en tu stack de Grafana Cloud.
 
-Although we've done our best to ensure the demo app will fail under pressure, it's not guaranteed. This is a bit of a reality with load testing, and is why it's important to run tests multiple times. The test only runs for a few minutes, and so you should be able to run a few tests during the breakout, and hopefully see some interesting things happen in at least one of those tests.
+Aunque hemos hecho todo lo posible para asegurarnos de que la app de demostración falle bajo presión, no está garantizado. Esto es un poco la realidad de las pruebas de carga, y es por eso que es importante ejecutar las pruebas varias veces. La prueba solo se ejecuta durante unos minutos, así que deberías poder ejecutar varias pruebas durante el breakout, y esperamos que veas cosas interesantes suceder en al menos una de ellas.
 
-### 1: Running the test
+### 1: Ejecutando la prueba
 
-The test we are looking for is called `Stress Test`. It can be found in `Performance Testing` -> `Projects` -> `opentelemetry-demo`:
+La prueba que estamos buscando se llama `Stress Test`. Se puede encontrar en `Performance Testing` -> `Projects` -> `opentelemetry-demo`:
 
 ![](images/25-project-screen.png)
 
-Click on the "burger icon" and select `Run test` to start the test:
+Haz clic en el "ícono de hamburguesa" y selecciona `Run test` para iniciar la prueba:
 
 ![](images/26-run-test.png)
 
-Doing so will cause the UI to display the test startup animation, along with giving a progress bar and status updates. After about 30 seconds, the page will redirect you to the test run UI where the progress of the test can be viewed in real-time. Once the test has finished, the screen should look something like this:
+Al hacerlo, la UI mostrará la animación de inicio de la prueba, junto con una barra de progreso y actualizaciones de estado. Después de unos 30 segundos, la página te redirigirá a la UI de ejecución de pruebas, donde se puede ver el progreso de la prueba en tiempo real. Una vez que la prueba haya finalizado, la pantalla debería verse algo así:
 
 ![](images/27-test-run-overview.png)
 
-The test will take a few minutes to complete, so lets use this time to explore the test run UI.
+La prueba tardará unos minutos en completarse, así que aprovechemos este tiempo para explorar la UI de ejecución de pruebas.
 
-### 2: Inspecting logs
+### 2: Inspeccionando los logs
 
-By the time the test has started, there should already be some logs available to look at. To view them, click on the `Logs` tab:
+Para el momento en que la prueba haya comenzado, ya debería haber algunos logs disponibles para revisar. Para verlos, haz clic en la pestaña `Logs`:
 
 ![](images/28-logs-tab.png)
 
-Should the test be running as expected, the only log messages that should appear here are those printing out Order IDs. These Order IDs are generated on the server-side, and so they are useful for verifying that the test is actually creating orders as expected.
+Si la prueba se está ejecutando según lo esperado, los únicos mensajes de log que deberían aparecer aquí son los que imprimen los Order IDs. Estos Order IDs se generan del lado del servidor, por lo que son útiles para verificar que la prueba realmente está creando órdenes según lo esperado.
 
-What might be useful to do now is to look at the script code that's printing out these logs. To do so, navigate to the `Script` tab, then scroll down until you can see line 55:
+Lo que podría ser útil hacer ahora es mirar el código del script que está imprimiendo estos logs. Para hacerlo, navega a la pestaña `Script`, luego desplázate hacia abajo hasta que puedas ver la línea 55:
 
 ![](images/29-script-tab.png)
 
-The function call on line 55 is called `checkout` - this is the one we're interested in.
+La llamada a función en la línea 55 se llama `checkout` - esa es la que nos interesa.
 
-It is located within the `default function`, which is the function that the VUs will execute repeatedly until the test ends. This function in turn calls other functions defined further down in the script, of which one of them is `checkout`. Separatingcode out into functions like this has two advantages: function re-use, and readability.
+Se encuentra dentro de la `default function`, que es la función que los VUs ejecutarán repetidamente hasta que termine la prueba. Esta función, a su vez, llama a otras funciones definidas más abajo en el script, una de las cuales es `checkout`. Separar el código en funciones de esta manera tiene dos ventajas: reutilización de código y legibilidad.
 
-The `checkout` function itself can be found on line 240:
+La función `checkout` en sí se puede encontrar en la línea 240:
 
 ![](images/30-checkout-function.png)
 
-The checkout transaction - when executed through the browser - actually consists of a sequence of HTTP requests. It might be interesting to capture the time it takes the whole sequence to complete - this is the purpose behind the built-in `group` function. 
+La transacción de checkout - cuando se ejecuta a través del navegador - en realidad consiste en una secuencia de solicitudes HTTP. Podría ser interesante capturar el tiempo que tarda toda la secuencia en completarse - este es el propósito detrás de la función incorporada `group`.
 
-At the start of the `group` function, we are making a POST request with some JSON payload. We set the `Content-Type` header to `application/json`, and we also add a `tag` to the request. This `tag`, with the property value `name`, will modify how the request is displayed in the HTTP tab, overwriting the URL with whatever is passed to the `name` tag. In this case, we're just chopping off the query string portion of the URL (i.e. the `?currencyCode=USD` part). This is how you would aggregate requests that are for the same endpoint but may have slightly different parameters (in this case, there are none, but it's still considered good practice to tag requests).
+Al inicio de la función `group`, estamos haciendo una solicitud POST con un payload JSON. Establecemos el header `Content-Type` en `application/json`, y también agregamos un `tag` a la solicitud. Este `tag`, con el valor de propiedad `name`, modificará cómo se muestra la solicitud en la pestaña de HTTP, sobrescribiendo la URL con lo que se le pase al tag `name`. En este caso, simplemente estamos recortando la parte de la cadena de consulta (query string) de la URL (es decir, la parte `?currencyCode=USD`). Así es como agruparías solicitudes que van al mismo endpoint pero que pueden tener parámetros levemente diferentes (en este caso no hay ninguno, pero de todas formas se considera una buena práctica etiquetar las solicitudes).
 
-Scroll down a bit and you'll see a `check` function, followed by the `console.log` statement we're looking for:
+Desplázate un poco más abajo y verás una función `check`, seguida del statement `console.log` que estamos buscando:
 
 ![](images/31-console-log.png)
 
-The `check` is used to confirm whether we received the expected HTTP status code 200. Should that not have been the case, the built-in `fail` function will be called. `fail` will terminate the iteration at this point, as well as print out an error message that includes the `response.body` to aid debugging.
+El `check` se usa para confirmar si recibimos el código de estado HTTP 200 esperado. Si ese no fuera el caso, se llamará a la función incorporada `fail`. `fail` terminará la iteración en ese punto, además de imprimir un mensaje de error que incluye el `response.body` para ayudar en la depuración.
 
-### 3: Looking at test results
+### 3: Revisando los resultados de la prueba
 
-Hopefully, by this point, the test will have started receiving some errors. We are, after all, stress testing the application!
+Es de esperar que, para este punto, la prueba haya comenzado a recibir algunos errores. ¡Al final, estamos haciendo una prueba de estrés (stress test) de la aplicación!
 
-If you see some HTTP failures being logged, navigate back to the `Logs` tab to see what is being printed out.
+Si ves que se están registrando algunos fallos HTTP, vuelve a la pestaña `Logs` para ver qué se está imprimiendo.
 
-Should the test have failed in the way it has been observed to fail during testing, there will likely be some combination of:
+Si la prueba ha fallado de la forma en que se ha observado que falla durante las pruebas, probablemente verás alguna combinación de lo siguiente:
 
 ```
 2023-05-23 11:27:02.728	
@@ -70,7 +70,7 @@ Internal Server Error
  executor=ramping-vus scenario=default
 ```
 
-And:
+Y:
 
 ```
 2023-05-23 11:29:16.113	
@@ -84,10 +84,10 @@ upstream request timeout
  executor=ramping-vus scenario=default
 ```
 
-If you have different errors being reported, please share it with the breakout leader!
+Si te aparecen errores diferentes, ¡compártelos con el líder del breakout!
 
-There's a point to be made here (regardless of the errors received) that will feed into the next presentation that covers Instrumentation: the errors being reported here are not very helpful. They do not tell us what went wrong, or where. They do not tell us how to fix the problem. They do not tell us how to prevent the problem from happening again. This is a harsh reality for a lot of load testers, especially those that are not the developers of the thing they're testing. If the server does not provide any useful information in error responses, you're going to have to find answers elsewhere!
+Hay algo importante que señalar aquí (independientemente de los errores recibidos) que se conectará con la próxima presentación, que cubre la Instrumentación: los errores que se reportan aquí no son muy útiles. No nos dicen qué salió mal, ni dónde. No nos dicen cómo solucionar el problema. No nos dicen cómo evitar que el problema vuelva a ocurrir. Esta es una realidad difícil para muchos testers de carga, especialmente aquellos que no son los desarrolladores de lo que están probando. Si el servidor no proporciona ninguna información útil en las respuestas de error, ¡tendrás que buscar respuestas en otro lugar!
 
-### That's it!
+### ¡Eso es todo!
 
-If there's time left in the breakout, feel free to run some more tests, or have a look through the other tabs like `Thresholds` and `Checks`.
+Si queda tiempo en el breakout, siéntete libre de ejecutar más pruebas, o de echar un vistazo a otras pestañas como `Thresholds` y `Checks`.

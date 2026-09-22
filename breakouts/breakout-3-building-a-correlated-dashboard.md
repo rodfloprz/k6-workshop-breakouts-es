@@ -1,78 +1,78 @@
-## Breakout 3: Building a correlated dashboard
+## Breakout 3: Construyendo un dashboard correlacionado
 
-This breakout will explore the dashboard that came pre-configured in your Grafana Cloud. It is the same dashboard that was used in the presentation, but with one panel missing - this is what we'll be building during the breakout.
+Este breakout explorará el dashboard que viene preconfigurado en tu Grafana Cloud. Es el mismo dashboard que se usó en la presentación, pero con un panel faltante - eso es lo que construiremos durante el breakout.
 
-### 1: Finding the dashboard
+### 1: Encontrando el dashboard
 
-The dashboard we're after can be found under `Dashboards` -> `General` -> `Example Dashboard`. It should look something like this:
+El dashboard que buscamos se puede encontrar en `Dashboards` -> `General` -> `Example Dashboard`. Debería verse algo así:
 
 ![](images/32-example-dashboard-empty.png)
 
-The reason it is empty upon first load is because we don't have a test run set. To set one, select a test using the Dashboard Variables dropdowns toward the top of the screen. The tests you've been running in previous breakouts should be available to select.
+La razón por la que aparece vacío al cargarlo por primera vez es porque no tenemos configurada una ejecución de prueba (test run). Para configurar una, selecciona una prueba usando los menús desplegables de Dashboard Variables hacia la parte superior de la pantalla. Las pruebas que has estado ejecutando en breakouts anteriores deberían estar disponibles para seleccionar.
 
-Select a test by setting `Project` to `opentelemetry-demo`, `Test` to `Stress Test`, and then finally a `Test Run` (the latest test run is probably the best one to pick).
+Selecciona una prueba estableciendo `Project` en `opentelemetry-demo`, `Test` en `Stress Test`, y finalmente un `Test Run` (probablemente lo mejor sea elegir la ejecución de prueba más reciente).
 
-Upon doing so, chances are that the test run data will not be visible in the current selected time range of `Last 15 minutes`. As a result, you should see a `Data outside time range` message along with a `Zoom to data` button on the `Check: POST Checkout status 200` panel:
+Al hacerlo, es probable que los datos de la ejecución de prueba no sean visibles en el rango de tiempo actualmente seleccionado de `Last 15 minutes`. Como resultado, deberías ver un mensaje `Data outside time range` junto con un botón `Zoom to data` en el panel `Check: POST Checkout status 200`:
 
 ![](images/33-zoom-to-data.png)
 
-Click on this button to have Grafana update the time range to match the test run's time range. This should cause all of the panels to update with the test run data:
+Haz clic en este botón para que Grafana actualice el rango de tiempo para que coincida con el rango de tiempo de la ejecución de prueba. Esto debería hacer que todos los paneles se actualicen con los datos de la ejecución de prueba:
 
 ![](images/34-example-dashboard-populated.png)
 
-There is an empty space on this dashboard that we want to fill with a new panel. The obvious way to add a panel would be with the `Add new panel` functionality, but instead of doing that, we'll be copying a panel from the Grafana Cloud k6 app and modifying it to suit our needs.
+Hay un espacio vacío en este dashboard que queremos llenar con un nuevo panel. La forma obvia de agregar un panel sería con la funcionalidad `Add new panel`, pero en lugar de hacer eso, copiaremos un panel desde la app de Grafana Cloud k6 y lo modificaremos para adaptarlo a nuestras necesidades.
 
-### 2: Copying panels from Grafana Cloud k6
+### 2: Copiando paneles desde Grafana Cloud k6
 
-Open up a new browser tab (as we'll want to come back to the dashboard). In this new tab, navigate to Grafana Cloud k6 and locate the same test run that was just selected using dashboard variables. You'll want to navigate all the way into the test results for that test run.
+Abre una nueva pestaña del navegador (ya que querremos volver al dashboard). En esta nueva pestaña, navega a Grafana Cloud k6 y localiza la misma ejecución de prueba que se acaba de seleccionar usando las Dashboard Variables. Querrás navegar hasta los resultados de la prueba de esa ejecución.
 
-Once there, locate the "burger icon" toward the top-right of the `Performance Overview` time series, and select `Copy to Clipboard`:
+Una vez ahí, localiza el "ícono de hamburguesa" hacia la parte superior derecha de la serie temporal `Performance Overview`, y selecciona `Copy to Clipboard`:
 
 ![](images/35-copy-to-clipboard.png)
 
-At this point, we have the panel JSON in our clipboard, meaning we can paste it into the `Example Dashboard`. Go back to the previous tab and select the `Add` button next to the time range picker. There should now be an entry in the drop-down for `Paste panel`:
+En este punto, tenemos el JSON del panel en nuestro portapapeles, lo que significa que podemos pegarlo en el `Example Dashboard`. Vuelve a la pestaña anterior y selecciona el botón `Add` junto al selector de rango de tiempo. Ahora debería haber una entrada en el menú desplegable para `Paste panel`:
 
 ![](images/36-paste-panel.png)
 
-Select this option to paste the panel into the dashboard. Once it is on the dashboard, we'll want to adjust the size of it to fit the empty space in the dashboard. The panel should also exist in the `Overview` row. Simply drag the panel down into the `Overview` section, and then expand it downward to fill the empty space. The end result should look like this:
+Selecciona esta opción para pegar el panel en el dashboard. Una vez que esté en el dashboard, querremos ajustar su tamaño para que se adapte al espacio vacío en el dashboard. El panel también debería existir en la fila `Overview`. Simplemente arrastra el panel hacia abajo, dentro de la sección `Overview`, y luego expándelo hacia abajo para llenar el espacio vacío. El resultado final debería verse así:
 
 ![](images/37-pasted-panel.png)
 
-### 3: Modifying panel queries
+### 3: Modificando las consultas del panel
 
-What's important to note here is that the copied panel will be hard-coded to the test run that it came from. As this dashboard has already been set up with Dashboard Variables to allow us to view the results of *any* test run, we'll need to update the panel queries to use the variables as well.
+Lo importante a notar aquí es que el panel copiado estará codificado (hard-coded) a la ejecución de prueba de la que proviene. Dado que este dashboard ya se ha configurado con Dashboard Variables para permitirnos ver los resultados de *cualquier* ejecución de prueba, necesitaremos actualizar las consultas del panel para que también usen las variables.
 
-Hover over the panel to reveal the burger icon, then select `Edit`. Doing so reveals that this panel is made up of 4 queries to the `Grafana Cloud k6` data source. The queries are bringing us back:
+Pasa el cursor sobre el panel para revelar el ícono de hamburguesa, luego selecciona `Edit`. Al hacerlo, se revela que este panel está compuesto por 4 consultas a la fuente de datos `Grafana Cloud k6`. Las consultas nos devuelven:
 
-- VUs: the total number of VUs that are running at any given point in time in the test
-- HTTP Request Rate: the number of HTTP requests that the VUs made, aggregated per second. In addition, there is a filter applied to this query to only count requests where the `status` `Tag` was not `0`. This means that we will only count requests that received some kind of response (in other words, timeouts would not be included in this metric).
-- HTTP Response Time: the response time of HTTP requests, aggregated by the `95th Percentile`. Like the previous query, this query also has a filter applied to it to only include requests where the `status` `Tag` was not `0`.
-- HTTP Failure Rate: here, we are bringing back the number of HTTP requests that failed, again filtering to only include requests where the `status` `Tag` was `0`.
+- VUs: el número total de VUs que se están ejecutando en cualquier momento dado durante la prueba
+- HTTP Request Rate: el número de solicitudes HTTP que hicieron los VUs, agregadas por segundo. Además, hay un filtro aplicado a esta consulta para contar solo las solicitudes en las que el `Tag` `status` no fuera `0`. Esto significa que solo contaremos las solicitudes que recibieron algún tipo de respuesta (en otras palabras, los timeouts no estarían incluidos en esta métrica).
+- HTTP Response Time: el tiempo de respuesta de las solicitudes HTTP, agregado por el `Percentil 95`. Igual que la consulta anterior, esta consulta también tiene un filtro aplicado para incluir solo las solicitudes en las que el `Tag` `status` no fuera `0`.
+- HTTP Failure Rate: aquí, estamos obteniendo el número de solicitudes HTTP que fallaron, nuevamente filtrando para incluir solo las solicitudes en las que el `Tag` `status` fuera `0`.
 
 ![](images/38-panel-queries.png)
 
-To have these queries use the dashboard's Dashboard Variables, all we'll need to do is modify the `Project`, `Test`, and `Test Run` drop-downs for each of the queries (12 updates in total) and have them point to the respective `$...` variable values.
+Para que estas consultas usen las Dashboard Variables del dashboard, todo lo que necesitaremos hacer es modificar los menús desplegables `Project`, `Test` y `Test Run` para cada una de las consultas (12 actualizaciones en total) y hacer que apunten a los valores de la variable `$...` correspondiente.
 
-The queries should end up looking like this:
+Las consultas deberían terminar viéndose así:
 
 ![](images/39-dashboard-variables-set.png)
 
-The display of the panel shouldn't actually change if the Dashboard Variables were set to the same test run that the panel was copied from. However, if you were to now change the Dashboard Variables to a different test run, you should see the panel update to reflect the new test run's data. With this small change, we've now made the panel dynamic, allowing us to view the results of any test run we want!
+La visualización del panel en realidad no debería cambiar si las Dashboard Variables se establecieran en la misma ejecución de prueba desde la que se copió el panel. Sin embargo, si ahora cambiaras las Dashboard Variables a una ejecución de prueba diferente, deberías ver que el panel se actualiza para reflejar los datos de la nueva ejecución de prueba. Con este pequeño cambio, ¡ahora hemos hecho que el panel sea dinámico, permitiéndonos ver los resultados de cualquier ejecución de prueba que queramos!
 
-At this point, it's a good idea to `Save` the dashboard, so go ahead and click the floppy-disk icon and hit `Save`.
+En este punto, es una buena idea `Save` (guardar) el dashboard, así que adelante, haz clic en el ícono de disquete y presiona `Save`.
 
-### 4: Viewing a running test
+### 4: Visualizando una prueba en ejecución
 
-As well as providing us historical information when looking at previous test runs, the dashboard can also be used to view the results of a test run that is currently running.
+Además de proporcionarnos información histórica al mirar ejecuciones de pruebas anteriores, el dashboard también se puede usar para ver los resultados de una ejecución de prueba que se está ejecutando actualmente.
 
-To do so, switch back to the Grafana Cloud k6 tab where the `Performance Overview` panel was copied from. Hit the `Run Test` button to kick off another test run.
+Para hacerlo, vuelve a la pestaña de Grafana Cloud k6 desde donde se copió el panel `Performance Overview`. Presiona el botón `Run Test` para iniciar otra ejecución de prueba.
 
-As soon as the test run has begun initializing, switch back to the dashboard tab. The dashboard will need to be refreshed for the new test run to appear in the list of `Test Runs` to select from. Select the `Test Run` and then update the time range picker to `Last 5 minutes`. You'll also want to set the dashboard to auto-update; a value of `10s` should suffice.
+En cuanto la ejecución de la prueba haya comenzado a inicializarse, vuelve a la pestaña del dashboard. El dashboard deberá actualizarse para que la nueva ejecución de prueba aparezca en la lista de `Test Runs` para seleccionar. Selecciona el `Test Run` y luego actualiza el selector de rango de tiempo a `Last 5 minutes`. También querrás configurar el dashboard para que se actualice automáticamente; un valor de `10s` debería ser suficiente.
 
-Doing so will show us the test run statistics as they come in:
+Al hacerlo, veremos las estadísticas de la ejecución de prueba a medida que van llegando:
 
 ![](images/40-realtime-dashboard.png)
 
-### Wrapping up
+### Para cerrar
 
-At this point, the breakout is over, so feel free to look around the dashboard! For example, have a look at the traces that show up in the `Traces with Errors` panel. You could perhaps also add a new panel for one of the other metrics available in the `Grafana Cloud k6` data source, such as the `Group Duration` metric that gives us response times for the various `group` timings that are being generated by the test.
+En este punto, el breakout ha terminado, ¡así que siéntete libre de explorar el dashboard! Por ejemplo, echa un vistazo a las trazas (traces) que aparecen en el panel `Traces with Errors`. Quizás también podrías agregar un nuevo panel para alguna de las otras métricas disponibles en la fuente de datos `Grafana Cloud k6`, como la métrica `Group Duration`, que nos da los tiempos de respuesta para las distintas mediciones de `group` que está generando la prueba.
